@@ -1,0 +1,16 @@
+# Copy this file to  .github/workflows/loc.yml  in your PROFILE repo (username/username)
+name: Update LOC card
+on:
+  schedule:
+    - cron: '0 3 * * *'   # daily at 03:00 UTC
+  workflow_dispatch:       # lets you run it manually
+permissions:
+  contents: write
+jobs:
+  loc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: AyushGupta011/loc-card@v1
+        with:
+          theme: dark

@@ -1,0 +1,76 @@
+name: 'Lines of Code Card'
+description: 'Generate a lines-of-code SVG card (with language breakdown) for your GitHub profile README. Free, no server needed.'
+author: 'AyushGupta011'
+branding:
+  icon: 'code'
+  color: 'orange'
+
+inputs:
+  username:
+    description: 'GitHub username to analyze. Defaults to the owner of the repo running the workflow.'
+    required: false
+    default: ''
+  token:
+    description: 'GitHub token. The default GITHUB_TOKEN works for public repos.'
+    required: false
+    default: ${{ github.token }}
+  theme:
+    description: 'dark | light | radical | tokyonight | dracula | gruvbox'
+    required: false
+    default: 'dark'
+  output:
+    description: 'Path of the SVG file to write.'
+    required: false
+    default: 'loc.svg'
+  exclude_repos:
+    description: 'Comma-separated repo names to skip (e.g. "old-repo,dump").'
+    required: false
+    default: ''
+  include_forks:
+    description: 'Count forked repos too (your commits only).'
+    required: false
+    default: 'false'
+  hide_deleted:
+    description: 'Hide the "lines deleted" column.'
+    required: false
+    default: 'false'
+  show_languages:
+    description: 'Show a language breakdown bar (by bytes of code, like github-readme-stats).'
+    required: false
+    default: 'true'
+  commit:
+    description: 'Commit and push the SVG back to the repo. Set to false to handle it yourself.'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate card
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/index.mjs"
+      env:
+        INPUT_USERNAME: ${{ inputs.username }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_THEME: ${{ inputs.theme }}
+        INPUT_OUTPUT: ${{ inputs.output }}
+        INPUT_EXCLUDE_REPOS: ${{ inputs.exclude_repos }}
+        INPUT_INCLUDE_FORKS: ${{ inputs.include_forks }}
+        INPUT_HIDE_DELETED: ${{ inputs.hide_deleted }}
+        INPUT_SHOW_LANGUAGES: ${{ inputs.show_languages }}
+
+    - name: Commit card
+      if: ${{ inputs.commit == 'true' }}
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.output }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "$OUTPUT"
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "chore: update lines-of-code card"
+          git push
+        fi
